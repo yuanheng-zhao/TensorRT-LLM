@@ -238,7 +238,8 @@ class KVCacheManager(object):
                  blocks: int,
                  tokens_per_block: int,
                  max_blocks_per_seq: int,
-                 beam_width: int = 1):
+                 beam_width: int = 1,
+                 sliding_window_length: int = 0):
 
         self.blocks_manager = BlocksManager(
             memory_pools=memory_pools,
@@ -248,6 +249,7 @@ class KVCacheManager(object):
         self.num_pools = len(memory_pools)
         self.tokens_per_block = tokens_per_block
         self.beam_width = beam_width
+        self.sliding_window_length = sliding_window_length
 
         self.lens = []
         self.sequences = []

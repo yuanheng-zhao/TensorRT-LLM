@@ -3226,6 +3226,11 @@ def gpt_attention(
 
     paged_kv_cache_flag = default_net().plugin_config.paged_kv_cache
 
+    sliding_window_length = trt.PluginField(
+        "sliding_window_length", 
+        np.array(default_net().plugin_config.sliding_window_length, dtype=np.int32),
+        trt.PluginFieldType.INT32)
+
     nheads = trt.PluginField("num_heads", np.array(num_heads, dtype=np.int32),
                              trt.PluginFieldType.INT32)
     num_kv_heads = trt.PluginField("num_kv_heads",
@@ -3323,7 +3328,7 @@ def gpt_attention(
         multi_block_mode, kv_cache_quant_mode_field, remove_input_padding,
         mask_type, paged_kv_cache, tokens_per_block, pf_type,
         max_context_length, qkv_bias_enabled, do_cross_attention_field,
-        max_distance
+        max_distance, sliding_window_length,
     ])
 
     attn_plug = attn_plg_creator.create_plugin("causal_attn", pfc)

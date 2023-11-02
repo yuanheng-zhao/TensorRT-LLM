@@ -252,6 +252,7 @@ class ModelConfig:
     gather_all_token_logits: bool = False
     dtype: str = ""
     use_custom_all_reduce: bool = False
+    sliding_window_length: int = 0
 
 
 @dataclass
@@ -771,7 +772,8 @@ class GenerationSession(object):
               max_context_length: int,
               max_new_tokens: int,
               beam_width: int = 1,
-              encoder_max_input_length: Optional[int] = None):
+              encoder_max_input_length: Optional[int] = None,
+              sliding_window_length: int = 0):
         # Store these params related to buffer size to check against
         # the input shape with the params given in decode()
         self.batch_size = batch_size
@@ -780,6 +782,7 @@ class GenerationSession(object):
         self.max_seq_length = max_context_length + max_new_tokens
         self.beam_width = beam_width
         self.encoder_max_input_length = encoder_max_input_length
+        self.sliding_window_length = sliding_window_length
 
         self.buffer = {}
         if self.mapping.is_last_pp_rank():
@@ -1864,7 +1867,8 @@ class GenerationSession(object):
             self.kv_cache_manager = KVCacheManager(memory_pools, blocks,
                                                    self.tokens_per_block,
                                                    max_blocks_per_seq,
-                                                   beam_width)
+                                                   beam_width,
+                                                   self.sliding_window_length)
 
             # Add sequences to the manager
             for bi in range(batch_size):

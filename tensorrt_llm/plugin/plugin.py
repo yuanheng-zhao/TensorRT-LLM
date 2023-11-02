@@ -83,6 +83,7 @@ class PluginConfig(object):
         self.paged_kv_cache = False
         self.tokens_per_block = 0
         self.lookup_plugin = False
+        self.sliding_window_length = 0
 
     def enable_qk_half_accum(self):
         self.attention_qk_half_accumulation = True
@@ -110,6 +111,11 @@ class PluginConfig(object):
         self.paged_kv_cache = True
         self.tokens_per_block = tokens_per_block
         logger.info(f"Paged KV Cache Enabled")
+        return self
+    
+    def set_sliding_window_lenth(self, lenth=0):
+        self.sliding_window_length = lenth
+        logger.info(f"Sliding Window Length is set to {lenth}")
         return self
 
     def set_gpt_attention_plugin(self, dtype='float16'):

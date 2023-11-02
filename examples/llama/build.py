@@ -192,6 +192,7 @@ def parse_arguments():
                         action='store_true')
     parser.add_argument('--gpus_per_node', type=int, default=8)
     parser.add_argument('--builder_opt', type=int, default=None)
+    parser.add_argument('--sw_length', type=int, default=0, help='sliding window length for attention')
     parser.add_argument(
         '--output_dir',
         type=str,
@@ -578,6 +579,8 @@ def build_rank_engine(builder: Builder,
     if args.use_gpt_attention_plugin:
         network.plugin_config.set_gpt_attention_plugin(
             dtype=args.use_gpt_attention_plugin)
+    if args.sw_length:
+        network.plugin_config.set_sliding_window_lenth(length=args.sw_length)
     if args.use_gemm_plugin:
         network.plugin_config.set_gemm_plugin(dtype=args.use_gemm_plugin)
     if args.use_rmsnorm_plugin:
@@ -683,7 +686,8 @@ def build(rank, args):
             fp8=args.quant_mode.has_fp8_qdq(),
             quant_mode=args.quant_mode,
             strongly_typed=args.strongly_typed,
-            opt_level=args.builder_opt)
+            opt_level=args.builder_opt,
+            sliding_window_length=args.sliding_window_length)
         engine_name = get_engine_name(MODEL_NAME, args.dtype, args.tp_size,
                                       args.pp_size, cur_rank)
         engine = build_rank_engine(builder, builder_config, engine_name,

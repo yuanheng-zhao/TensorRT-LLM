@@ -137,7 +137,6 @@ class Attention(Module):
                  quant_mode: QuantMode = QuantMode(0),
                  q_scaling=1.0,
                  cross_attention=False,
-                 sliding_window_length=0,
                  relative_attention=False,
                  max_distance=0,
                  num_buckets=0,
@@ -180,7 +179,6 @@ class Attention(Module):
         self.rotary_embedding_base = rotary_embedding_base
         self.rotary_embedding_scale_type = RotaryScalingType.none
         self.rotary_embedding_scale = 1.0
-        self.sliding_window_length = sliding_window_length
         if rotary_embedding_scaling is not None:
             assert rotary_embedding_scaling["type"] in ["linear", "dynamic"]
             self.rotary_embedding_scale_type = RotaryScalingType.linear if rotary_embedding_scaling[
@@ -359,7 +357,6 @@ class Attention(Module):
                 if self.relative_attention else None,
                 max_distance=self.max_distance,
                 host_context_lengths=attention_params.host_context_lengths,
-                sliding_window_length=self.sliding_window_length,
             )
 
         else:

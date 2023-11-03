@@ -112,10 +112,10 @@ class PluginConfig(object):
         self.tokens_per_block = tokens_per_block
         logger.info(f"Paged KV Cache Enabled")
         return self
-    
-    def set_sliding_window_lenth(self, lenth=0):
-        self.sliding_window_length = lenth
-        logger.info(f"Sliding Window Length is set to {lenth}")
+
+    def enable_sliding_window_attn(self, length=2048):
+        self.sliding_window_length = length
+        logger.info(f"Sliding Window Length is set to {self.sliding_window_length}")
         return self
 
     def set_gpt_attention_plugin(self, dtype='float16'):

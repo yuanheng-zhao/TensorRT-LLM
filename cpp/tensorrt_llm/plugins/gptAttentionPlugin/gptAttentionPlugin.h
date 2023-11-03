@@ -72,7 +72,7 @@ public:
         tensorrt_llm::kernels::ContextFMHAType context_fmha_type, bool multi_block_mode, int kv_cache_quant_mode,
         bool remove_input_padding, tensorrt_llm::kernels::AttentionMaskType mask_type, bool paged_kv_cache,
         int tokens_per_block, nvinfer1::DataType type, int32_t max_context_length, bool qkv_bias_enabled,
-        bool cross_attention = false, int max_distance = 0);
+        bool cross_attention = false, int max_distance = 0, int sliding_window_size = 0);
 
     GPTAttentionPlugin(const void* data, size_t length);
 

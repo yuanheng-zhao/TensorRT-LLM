@@ -43,12 +43,12 @@ GPTAttentionPlugin::GPTAttentionPlugin(int num_heads, int num_kv_heads, int head
     tensorrt_llm::kernels::ContextFMHAType context_fmha_type, bool multi_block_mode, int kv_cache_quant_mode,
     bool remove_input_padding, tensorrt_llm::kernels::AttentionMaskType mask_type, bool paged_kv_cache,
     int tokens_per_block, nvinfer1::DataType type, int32_t max_context_length, bool qkv_bias_enabled,
-    bool cross_attention, int max_distance)
+    bool cross_attention, int max_distance, int sliding_window_size)
     : GPTAttentionPluginCommon(num_heads, num_kv_heads, head_size, unidirectional, q_scaling, position_embedding_type,
         rotary_embedding_dim, rotary_embedding_base, rotary_embedding_scale_type, rotary_embedding_scale,
         rotary_embedding_max_positions, tp_size, tp_rank, context_fmha_type, multi_block_mode, kv_cache_quant_mode,
         remove_input_padding, mask_type, paged_kv_cache, tokens_per_block, type, max_context_length, qkv_bias_enabled,
-        cross_attention, max_distance)
+        cross_attention, max_distance, sliding_window_size)
 {
 }
 
@@ -492,7 +492,8 @@ IPluginV2* GPTAttentionPluginCreator::createPlugin(const char* name, const Plugi
             p.getScalar<int32_t>("max_context_length").value(),
             static_cast<bool>(p.getScalar<int8_t>("qkv_bias_enabled").value()),
             static_cast<bool>(p.getScalar<int8_t>("do_cross_attention").value()),
-            static_cast<int32_t>(p.getScalar<int32_t>("max_distance").value()));
+            static_cast<int32_t>(p.getScalar<int32_t>("max_distance").value()),
+            static_cast<int32_t>(p.getScalar<int32_t>("sliding_window_size").value()));
         obj->setPluginNamespace(mNamespace.c_str());
         return obj;
     }

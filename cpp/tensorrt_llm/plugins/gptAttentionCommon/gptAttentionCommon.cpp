@@ -239,7 +239,7 @@ GPTAttentionPluginCommon::GPTAttentionPluginCommon(int num_heads, int num_kv_hea
     tensorrt_llm::kernels::ContextFMHAType context_fmha_type, bool multi_block_mode, int kv_cache_quant_mode,
     bool remove_input_padding, tensorrt_llm::kernels::AttentionMaskType mask_type, bool paged_kv_cache,
     int tokens_per_block, nvinfer1::DataType type, int32_t max_context_length, bool qkv_bias_enabled,
-    bool cross_attention, int max_distance)
+    bool cross_attention, int max_distance, int sliding_window_size)
     : mNumHeads(num_heads)
     , mNumKVHeads(num_kv_heads)
     , mHeadSize(head_size)
@@ -266,6 +266,7 @@ GPTAttentionPluginCommon::GPTAttentionPluginCommon(int num_heads, int num_kv_hea
     , mQKVBiasEnabled(qkv_bias_enabled)
     , mCrossAttention(cross_attention)
     , mMaxDistance(max_distance)
+    , mSlidingWindowSize(sliding_window_size)
 {
     mEnableContextFMHA = mEnableContextFMHA && (mType == DataType::kHALF || mType == DataType::kBF16);
     TLLM_CHECK(isRoPE() == (rotary_embedding_dim != 0));
@@ -314,6 +315,7 @@ GPTAttentionPluginCommon::GPTAttentionPluginCommon(const void* data, size_t leng
     read(d, mQKVBiasEnabled);
     read(d, mCrossAttention);
     read(d, mMaxDistance);
+    read(d, mSlidingWindowSize);
 
     mKVCacheQuantMode = tc::QuantMode(kvCacheQuantMode);
 
@@ -425,6 +427,8 @@ int GPTAttentionPluginCommon::enqueueContext(const EnqueueContextParams<T, KVCac
     const float q_scaling = mQScaling;
     const bool* finished = nullptr;
     const bool has_ia3 = false;
+
+    const int sliding_window_size = mSlidingWindowSize;
 
     KVCacheBuffer kv_cache_buffer;
     const auto elem_size = mKVCacheQuantMode.hasKvCacheQuant() ? sizeof(int8_t) : sizeof(T);
@@ -849,6 +853,7 @@ int GPTAttentionPluginCommon::enqueueGeneration(
     const T* relative_attention_bias = isRelativePosition() ? params.relative_attention_bias : nullptr;
     const int relative_attention_bias_stride = isRelativePosition() ? params.relative_attention_bias_stride : 0;
     const int max_distance = mMaxDistance;
+    const int sliding_window_size = mSlidingWindowSize;
     const bool* finished = nullptr;
     const bool has_ia3 = false;
 
@@ -1031,7 +1036,8 @@ size_t GPTAttentionPluginCommon::getCommonSerializationSize() noexcept
         + sizeof(mTpSize) + sizeof(mTpRank) + sizeof(mEnableContextFMHA) + sizeof(mFMHAForceFP32Acc)
         + sizeof(mMultiBlockMode) + sizeof(unsigned int) // mKVCacheQuantMode
         + sizeof(mRemovePadding) + sizeof(mMaskType) + sizeof(mPagedKVCache) + sizeof(mTokensPerBlock) + sizeof(mType)
-        + sizeof(mMaxContextLength) + sizeof(mQKVBiasEnabled) + sizeof(mCrossAttention) + sizeof(mMaxDistance);
+        + sizeof(mMaxContextLength) + sizeof(mQKVBiasEnabled) + sizeof(mCrossAttention) + sizeof(mMaxDistance)
+        + sizeof(mSlidingWindowSize);
 }
 
 void GPTAttentionPluginCommon::serializeCommon(void* buffer) const noexcept
@@ -1063,6 +1069,7 @@ void GPTAttentionPluginCommon::serializeCommon(void* buffer) const noexcept
     write(d, mQKVBiasEnabled);
     write(d, mCrossAttention);
     write(d, mMaxDistance);
+    write(d, mSlidingWindowSize);
     assert(d == a + getCommonSerializationSize());
 }
 
@@ -1102,6 +1109,7 @@ GPTAttentionPluginCreatorCommon::GPTAttentionPluginCreatorCommon()
     mPluginAttributes.emplace_back(PluginField("qkv_bias_enabled", nullptr, PluginFieldType::kINT8, 0));
     mPluginAttributes.emplace_back(PluginField("do_cross_attention", nullptr, PluginFieldType::kINT8, 0));
     mPluginAttributes.emplace_back(PluginField("max_distance", nullptr, PluginFieldType::kINT32, 0));
+    mPluginAttributes.emplace_back(PluginField("sliding_window_size", nullptr, PluginFieldType::kINT32, 0));
     mFC.nbFields = mPluginAttributes.size();
     mFC.fields = mPluginAttributes.data();
 }

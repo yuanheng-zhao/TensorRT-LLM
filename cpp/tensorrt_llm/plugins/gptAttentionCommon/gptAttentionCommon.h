@@ -43,7 +43,7 @@ public:
         tensorrt_llm::kernels::ContextFMHAType context_fmha_type, bool multi_block_mode, int kv_cache_quant_mode,
         bool remove_input_padding, tensorrt_llm::kernels::AttentionMaskType mask_type, bool paged_kv_cache,
         int tokens_per_block, nvinfer1::DataType type, int32_t max_context_length, bool qkv_bias_enabled,
-        bool cross_attention = false, int max_distance = 0);
+        bool cross_attention = false, int max_distance = 0, int sliding_window_size = 0);
 
     GPTAttentionPluginCommon(const void* data, size_t length);
 
@@ -193,6 +193,8 @@ protected:
     bool mQKVBiasEnabled;
     bool mCrossAttention = false;
     int mMaxDistance = 0;
+    // 0 by default, which means no sliding window
+    int mSlidingWindowSize = 0;
 
     // fmha runner (disable by default)
     // flag: disabled = 0, enabled = 1, enabled with fp32 accumulation = 2
